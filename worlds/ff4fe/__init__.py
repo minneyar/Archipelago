@@ -105,7 +105,7 @@ class FF4FEWorld(World):
     def generate_early(self) -> None:
         self.options.priority_locations.value -= self.options.exclude_locations.value
         if self.options.ForgeTheCrystal:
-            self.options.priority_locations.value.remove("Kokkol's House 2F -- Kokkol -- forge item")
+            self.options.priority_locations.value -= {"Kokkol's House 2F -- Kokkol -- forge item"}
 
     @override
     def create_regions(self) -> None:
