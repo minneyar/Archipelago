@@ -7,7 +7,6 @@ from typing import final, override
 
 import Utils
 from settings import get_settings
-
 from worlds.Files import APPatchExtension, APProcedurePatch, APTokenMixin
 
 from .items import all_items
@@ -126,14 +125,10 @@ class FF4FEPatchExtension(APPatchExtension):
             rom_data[junked_items_length_byte] = len(junked_items)
             rom_data[kept_items_length_byte] = len(kept_items)
             for i, item_name in enumerate(junked_items):
-                item_id = [
-                    item for item in all_items if item.name == item_name
-                ].pop().fe_id
+                item_id = [item for item in all_items if item.name == item_name].pop().fe_id
                 rom_data[junked_items_array_start + i] = item_id
             for i, item_name in enumerate(kept_items):
-                item_id = [
-                    item for item in all_items if item.name == item_name
-                ].pop().fe_id
+                item_id = [item for item in all_items if item.name == item_name].pop().fe_id
                 rom_data[kept_items_array_start + i] = item_id
         return rom_data
 

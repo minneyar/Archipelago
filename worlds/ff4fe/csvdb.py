@@ -25,8 +25,7 @@ def HexInt(src_value="0"):
 def NullableHexInt(src_value=""):
     if type(src_value) is str and src_value.strip() == "":
         return None
-    else:
-        return HexInt(src_value)
+    return HexInt(src_value)
 
 
 def List(delimiter, value_type=str, filter_func=None):
@@ -99,9 +98,7 @@ class View:
         return None
 
     def find_all(self, criteria_lambda=None):
-        return [
-            row for row in self if (criteria_lambda is None or criteria_lambda(row))
-        ]
+        return [row for row in self if (criteria_lambda is None or criteria_lambda(row))]
 
     def __iter__(self):
         for row in self._csvdb._rows:

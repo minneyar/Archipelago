@@ -1,4 +1,4 @@
-from . import items
+from .items import key_item_names
 
 area_rules = {
     "BaronWeaponShop": ["Baron Key"],
@@ -65,9 +65,7 @@ individual_location_rules = {
     "Sylvan Cave -- B3F -- Sylph item": ["Hook", "Magma Key", "Pan"],
     "Mt. Ordeals -- Mirror Room -- item": ["Mirror Cecil Slot Defeated"],
     "Cave Magnes -- Crystal Room -- item": ["Dark Elf Slot Defeated"],
-    "Tower of Bab-il (lower) -- 5F -- item (Super Cannon destruction)": [
-        "Dark Imp Slot Defeated"
-    ],
+    "Tower of Bab-il (lower) -- 5F -- item (Super Cannon destruction)": ["Dark Imp Slot Defeated"],
     "Baron Castle -- Basement -- Odin item": ["Odin Slot Defeated"],
     "Cave Bahamut -- B3F -- Baham item": ["Bahamut Slot Defeated"],
     "Town of Monsters -- Throne Room -- Asura item": ["Asura Slot Defeated"],
@@ -77,13 +75,7 @@ individual_location_rules = {
     "Kokkol's House 2F -- Kokkol -- forge item": ["Legend Sword", "Adamant"],
     "Lunar Subterrane -- B7 (right room) -- Ribbon Left": ["D. Lunars Slot Defeated"],
     "Lunar Subterrane -- B7 (right room) -- Ribbon Right": ["D. Lunars Slot Defeated"],
-    "Objectives Status": [
-        *[
-            item
-            for item in items.key_item_names
-            if item not in ["Crystal", "Spoon", "Pass"]
-        ]
-    ],
+    "Objectives Status": [*[item for item in key_item_names if item not in ["Crystal", "Spoon", "Pass"]]],
     "Objective Reward": ["All Objectives Cleared"],
 }
 

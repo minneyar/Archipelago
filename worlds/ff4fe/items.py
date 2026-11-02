@@ -3,7 +3,7 @@ from typing import final, override
 
 from BaseClasses import Item, ItemClassification
 
-from . import csvdb
+from .csvdb import CsvDb
 
 
 @final
@@ -43,9 +43,7 @@ class ItemData:
 
     @classmethod
     def create_ap_item(cls):
-        return ItemData(
-            "Archipelago Item", ItemClassification.filler, 100, 0x500, "other"
-        )
+        return ItemData("Archipelago Item", ItemClassification.filler, 100, 0x500, "other")
 
 
 all_items: list[ItemData] = []
@@ -62,9 +60,7 @@ items_by_tier: list[list[ItemData]] = [
     [],
 ]
 
-itemscsv = csvdb.CsvDb(
-    pkgutil.get_data(__name__, "data/items.csvdb").decode().splitlines()
-)
+itemscsv = CsvDb(pkgutil.get_data(__name__, "data/items.csvdb").decode().splitlines())
 
 for item in itemscsv.create_view():
     item_tier = int(item.tier) if item.tier.isdecimal() else -1
@@ -72,9 +68,7 @@ for item in itemscsv.create_view():
     if item_tier == 99:
         item_tier = 5
     item_classification = ItemClassification.filler
-    if (
-        item.spoilername == "" or item.spoilername == "Medusa Sword"
-    ):  # Medusa Sword is bugged, so we don't include it.
+    if item.spoilername == "" or item.spoilername == "Medusa Sword":  # Medusa Sword is bugged, so we don't include it.
         continue
     # Legend Sword isn't flagged as a key item, weirdly.
     if item.subtype == "key" or item.spoilername == "Legend Sword":
@@ -84,9 +78,7 @@ for item in itemscsv.create_view():
             else ItemClassification.progression_skip_balancing
         )
     # Spoon is, though...but it doesn't unlock anything.
-    elif item.spoilername == "Spoon" or (
-        (int(item.tier) > 4) if item.tier.isdecimal() else False
-    ):
+    elif item.spoilername == "Spoon" or ((int(item.tier) > 4) if item.tier.isdecimal() else False):
         item_classification = ItemClassification.useful
     item_price = int(item.price, 10) if item.price != "" else 0
     new_item = ItemData(
@@ -102,30 +94,14 @@ for item in itemscsv.create_view():
         items_by_tier[item_tier - 1].append(new_item)
 
 
-useful_items = [
-    item
-    for item in all_items
-    if item.classification == ItemClassification.useful and item.name != "Spoon"
-]
-filler_items = [
-    item
-    for item in all_items
-    if item.classification == ItemClassification.filler and item.name != "Spoon"
-]
+useful_items = [item for item in all_items if item.classification == ItemClassification.useful and item.name != "Spoon"]
+filler_items = [item for item in all_items if item.classification == ItemClassification.filler and item.name != "Spoon"]
 weapons = [
-    item
-    for item in all_items
-    if item.group == "weapon" and item.classification != ItemClassification.progression
+    item for item in all_items if item.group == "weapon" and item.classification != ItemClassification.progression
 ]
-armors = [
-    item
-    for item in all_items
-    if item.group == "armor" and item.classification != ItemClassification.progression
-]
+armors = [item for item in all_items if item.group == "armor" and item.classification != ItemClassification.progression]
 
-all_items.append(
-    ItemData("Advance Weapon", ItemClassification.useful, 8, 0x46, "weapon", 100000)
-)
+all_items.append(ItemData("Advance Weapon", ItemClassification.useful, 8, 0x46, "weapon", 100000))
 
 useful_item_names = [item.name for item in [*useful_items]]
 filler_item_names = [item.name for item in [*filler_items]]
@@ -176,15 +152,13 @@ for character in character_data:
 key_items = [
     item
     for item in all_items
-    if (item.classification == ItemClassification.progression or item.name == "Spoon")
-    and item.name not in characters
+    if (item.classification == ItemClassification.progression or item.name == "Spoon") and item.name not in characters
 ]
 
 key_item_names = [
     item.name
     for item in all_items
-    if (item.classification == ItemClassification.progression or item.name == "Spoon")
-    and item.name not in characters
+    if (item.classification == ItemClassification.progression or item.name == "Spoon") and item.name not in characters
 ]
 
 key_items_tracker_order = [

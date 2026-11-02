@@ -59,6 +59,4 @@ underworld_areas = [
 
 moon_areas = ["Giant", "BahamutCave", "LunarPath", "LunarCore", "LunarPalace"]
 
-overworld_areas = [
-    area for area in areas if area not in [*hook_areas, *underworld_areas, *moon_areas]
-]
+overworld_areas = [area for area in areas if area not in [*hook_areas, *underworld_areas, *moon_areas]]

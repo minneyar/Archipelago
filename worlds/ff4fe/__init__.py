@@ -9,12 +9,10 @@ import settings
 import Utils
 from BaseClasses import Item, ItemClassification, MultiWorld, Region, Tutorial
 from Fill import remaining_fill
-
 from worlds.AutoWorld import WebWorld, World
 from worlds.generic.Rules import add_item_rule, add_rule
 
-from . import csvdb, events, flags, items, locations, rules, topology
-from .Client import FF4FEClient
+from . import events, flags, items, locations, rules, topology
 from .itempool import create_itempool
 from .items import FF4FEItem, ItemData
 from .locations import FF4FELocation
@@ -67,13 +65,8 @@ class FF4FEWorld(World):
 
     web = FF4FEWebWorld()
     base_id = 7191991
-    item_name_to_id = {
-        item.name: id for id, item in enumerate(items.all_items, base_id)
-    }
-    location_name_to_id = {
-        location.name: id
-        for id, location in enumerate(locations.all_locations, base_id)
-    }
+    item_name_to_id = {item.name: id for id, item in enumerate(items.all_items, base_id)}
+    location_name_to_id = {location.name: id for id, location in enumerate(locations.all_locations, base_id)}
     item_name_groups = items.item_name_groups
 
     location_name_groups = locations.area_groups
@@ -94,34 +87,27 @@ class FF4FEWorld(World):
     def get_objective_count(self):
         if self.objective_count != -1:
             return self.objective_count
-        else:
-            objective_count = 0
-            if self.options.ForgeTheCrystal:
-                objective_count += 1
-            if self.options.ConquerTheGiant:
-                objective_count += 1
-            if self.options.DefeatTheFiends:
-                objective_count += 6
-            if self.options.FindTheDarkMatter:
-                objective_count += 1
-            objective_count += self.options.AdditionalObjectives.value
-            objective_count = min(objective_count, 32)
-            self.objective_count = objective_count
-            return min(objective_count, 32)
+        objective_count = 0
+        if self.options.ForgeTheCrystal:
+            objective_count += 1
+        if self.options.ConquerTheGiant:
+            objective_count += 1
+        if self.options.DefeatTheFiends:
+            objective_count += 6
+        if self.options.FindTheDarkMatter:
+            objective_count += 1
+        objective_count += self.options.AdditionalObjectives.value
+        objective_count = min(objective_count, 32)
+        self.objective_count = objective_count
+        return min(objective_count, 32)
 
     @override
     def generate_early(self) -> None:
-        self.options.priority_locations.value = (
-            self.options.priority_locations.value
-            | (
-                set(locations.major_location_names)
-                - self.options.exclude_locations.value
-            )
+        self.options.priority_locations.value = self.options.priority_locations.value | (
+            set(locations.major_location_names) - self.options.exclude_locations.value
         )
         if self.options.ForgeTheCrystal:
-            self.options.priority_locations.value -= {
-                "Kokkol's House 2F -- Kokkol -- forge item"
-            }
+            self.options.priority_locations.value -= {"Kokkol's House 2F -- Kokkol -- forge item"}
 
     @override
     def create_regions(self) -> None:
@@ -140,9 +126,7 @@ class FF4FEWorld(World):
         overworld.connect(
             underworld,
             "Underworld Access",
-            lambda state: (
-                state.has("Hook", self.player) or state.has("Magma Key", self.player)
-            ),
+            lambda state: state.has("Hook", self.player) or state.has("Magma Key", self.player),
         )
         overworld.connect(
             moon,
@@ -167,9 +151,7 @@ class FF4FEWorld(World):
                 moon.connect(new_region, "Moon to " + area)
 
         for location in locations.all_locations:
-            if location.name.startswith(
-                "Objective"
-            ):  # Objectives aren't "real" locations
+            if location.name.startswith("Objective"):  # Objectives aren't "real" locations
                 continue
             if (
                 self.options.ForgeTheCrystal  # Forge the Crystal doesn't have a Kokkol location.
@@ -191,9 +173,7 @@ class FF4FEWorld(World):
             region.locations.append(new_location)
 
         if not self.is_vanilla_game():
-            new_location = FF4FELocation(
-                self.player, "Objectives Status", None, overworld
-            )
+            new_location = FF4FELocation(self.player, "Objectives Status", None, overworld)
             overworld.locations.append(new_location)
             new_location = FF4FELocation(
                 self.player,
@@ -204,40 +184,26 @@ class FF4FEWorld(World):
             overworld.locations.append(new_location)
 
         for i in range(self.get_objective_count()):
-            new_location = FF4FELocation(
-                self.player, f"Objective {i + 1} Status", None, overworld
-            )
+            new_location = FF4FELocation(self.player, f"Objective {i + 1} Status", None, overworld)
             overworld.locations.append(new_location)
 
     @override
     def create_item(self, name: str) -> FF4FEItem:
-        item_data = next(
-            (item_data for item_data in items.all_items if item_data.name == name), None
-        )
+        item_data = next((item_data for item_data in items.all_items if item_data.name == name), None)
         if not item_data:
-            raise Exception(
-                f"{name} is not a valid item name for Final Fantasy 4 Free Enterprise"
-            )
-        return FF4FEItem(
-            name, item_data.classification, self.item_name_to_id[name], self.player
-        )
+            raise Exception(f"{name} is not a valid item name for Final Fantasy 4 Free Enterprise")
+        return FF4FEItem(name, item_data.classification, self.item_name_to_id[name], self.player)
 
     def create_event(self, event: str) -> FF4FEItem:
         return FF4FEItem(event, ItemClassification.progression, None, self.player)
 
     @override
     def create_items(self) -> None:
-        item_pool, self.chosen_character, self.second_character = create_itempool(
-            locations.all_locations, self
-        )
+        item_pool, self.chosen_character, self.second_character = create_itempool(locations.all_locations, self)
 
         character_locations = locations.character_locations.copy()
-        self.get_location("Starting Character 1").place_locked_item(
-            self.create_item(self.chosen_character)
-        )
-        self.get_location("Starting Character 2").place_locked_item(
-            self.create_item(self.second_character)
-        )
+        self.get_location("Starting Character 1").place_locked_item(self.create_item(self.chosen_character))
+        self.get_location("Starting Character 2").place_locked_item(self.create_item(self.second_character))
         character_locations.remove("Starting Character 1")
         character_locations.remove("Starting Character 2")
         item_pool.remove(self.chosen_character)
@@ -246,9 +212,7 @@ class FF4FEWorld(World):
         if self.options.ConquerTheGiant:
             character_locations.remove("Giant of Bab-il Character")
             earned_character_locations.remove("Giant of Bab-il Character")
-            self.get_location("Giant of Bab-il Character").place_locked_item(
-                self.create_item("None")
-            )
+            self.get_location("Giant of Bab-il Character").place_locked_item(self.create_item("None"))
             item_pool.remove("None")
         if self.options.NoFreeCharacters:
             for location in locations.free_character_locations:
@@ -275,38 +239,32 @@ class FF4FEWorld(World):
                 if item.name in self.options.RestrictedCharacters.value:
                     # Place restricted characters where they're allowed first, then into the other spots.
                     if len(restricted_character_allow_locations) > 0:
-                        self.get_location(
-                            restricted_character_allow_locations.pop()
-                        ).place_locked_item(self.create_item(item.name))
+                        self.get_location(restricted_character_allow_locations.pop()).place_locked_item(
+                            self.create_item(item.name)
+                        )
                     else:
-                        self.get_location(
-                            restricted_character_forbid_locations.pop()
-                        ).place_locked_item(self.create_item(item.name))
+                        self.get_location(restricted_character_forbid_locations.pop()).place_locked_item(
+                            self.create_item(item.name)
+                        )
                 else:
                     # Inverse of the above: unrestricted characters go into the unrestricted slots first to leave room
                     # for the restricted characters.
                     if len(restricted_character_forbid_locations) > 0:
-                        self.get_location(
-                            restricted_character_forbid_locations.pop()
-                        ).place_locked_item(self.create_item(item.name))
+                        self.get_location(restricted_character_forbid_locations.pop()).place_locked_item(
+                            self.create_item(item.name)
+                        )
                     else:
-                        self.get_location(
-                            restricted_character_allow_locations.pop()
-                        ).place_locked_item(self.create_item(item.name))
+                        self.get_location(restricted_character_allow_locations.pop()).place_locked_item(
+                            self.create_item(item.name)
+                        )
                 continue
             if item.name == "Crystal" and not self.is_vanilla_game():
-                (
-                    self.get_location("Objective Reward").place_locked_item(
-                        self.create_item("Crystal")
-                    )
-                )
+                (self.get_location("Objective Reward").place_locked_item(self.create_item("Crystal")))
                 continue
             if item.name == "DkMatter":
                 self.dark_matters.append(item)
                 continue
-            if item.name.startswith(
-                "Objective"
-            ):  # Objectives get manually placed later.
+            if item.name.startswith("Objective"):  # Objectives get manually placed later.
                 continue
             self.multiworld.itempool.append(item)
 
@@ -316,37 +274,18 @@ class FF4FEWorld(World):
         for location in locations.character_locations:
             add_item_rule(
                 self.get_location(location),
-                lambda item: (
-                    item.name in items.characters and item.player == self.player
-                ),
+                lambda item: item.name in items.characters and item.player == self.player,
             )
+            if self.options.NoFreeCharacters and location in locations.free_character_locations:
+                add_item_rule(self.get_location(location), lambda item: item.name == "None")
+            if self.options.NoEarnedCharacters and location in locations.earned_character_locations:
+                add_item_rule(self.get_location(location), lambda item: item.name == "None")
             if (
-                self.options.NoFreeCharacters
-                and location in locations.free_character_locations
-            ):
-                add_item_rule(
-                    self.get_location(location), lambda item: item.name == "None"
-                )
-            if (
-                self.options.NoEarnedCharacters
-                and location in locations.earned_character_locations
-            ):
-                add_item_rule(
-                    self.get_location(location), lambda item: item.name == "None"
-                )
-            if (
-                len(
-                    self.options.AllowedCharacters.value.difference(
-                        self.options.RestrictedCharacters.value
-                    )
-                )
-                > 0
+                len(self.options.AllowedCharacters.value.difference(self.options.RestrictedCharacters.value)) > 0
             ) and location in locations.restricted_character_locations:
                 add_item_rule(
                     self.get_location(location),
-                    lambda item: (
-                        item.name not in self.options.RestrictedCharacters.value
-                    ),
+                    lambda item: item.name not in self.options.RestrictedCharacters.value,
                 )
 
         for location in locations.all_locations:
@@ -382,21 +321,15 @@ class FF4FEWorld(World):
         # If we're doing Hero Challenge and we're not doing Forge the Crystal, Kokkol has a fancy weapon for our Hero.
         # The actual weapon is determined by Free Enterprise, so you can't hint if it's an Excalipur and remove the
         # potential comedy.
-        if (
-            self.options.HeroChallenge.current_key != "none"
-            and not self.options.ForgeTheCrystal
-        ):
-            self.get_location(
-                "Kokkol's House 2F -- Kokkol -- forge item"
-            ).place_locked_item(self.create_item("Advance Weapon"))
+        if self.options.HeroChallenge.current_key != "none" and not self.options.ForgeTheCrystal:
+            self.get_location("Kokkol's House 2F -- Kokkol -- forge item").place_locked_item(
+                self.create_item("Advance Weapon")
+            )
 
         # Zeromus requires the Pass or Moon access in addition to the Crystal. Mostly just makes the spoiler log nicer.
         add_rule(
             self.get_location("Zeromus"),
-            lambda state: (
-                state.has("Pass", self.player)
-                or state.has("Darkness Crystal", self.player)
-            ),
+            lambda state: state.has("Pass", self.player) or state.has("Darkness Crystal", self.player),
         )
         if self.options.FindTheDarkMatter:
             if self.options.ObjectiveReward == "crystal":
@@ -420,17 +353,13 @@ class FF4FEWorld(World):
             if location.area in topology.underworld_areas:
                 # Skip over Kokkol on Forge the Crystal...
                 if location.name == "Kokkol's House 2F -- Kokkol -- forge item" and (
-                    not location.name
-                    in self.multiworld.regions.location_cache[self.player]
+                    location.name not in self.multiworld.regions.location_cache[self.player]
                 ):
                     continue
                 # ...but otherwise all underground locations require underground access.
                 add_rule(
                     self.get_location(location.name),
-                    lambda state: (
-                        state.has("Hook", self.player)
-                        or state.has("Magma Key", self.player)
-                    ),
+                    lambda state: state.has("Hook", self.player) or state.has("Magma Key", self.player),
                 )
             # Moon needs the ability to get to the moon.
             if location.area in topology.moon_areas:
@@ -441,19 +370,14 @@ class FF4FEWorld(World):
                 if not self.options.UnsafeKeyItemPlacement:
                     add_rule(
                         self.get_location(location.name),
-                        lambda state: (
-                            state.has("Hook", self.player)
-                            or state.has("Magma Key", self.player)
-                        ),
+                        lambda state: state.has("Hook", self.player) or state.has("Magma Key", self.player),
                     )
             # Otherwise, we consult the list of area-specific rules (e.g. Baron Castle requires Baron Key).
             if location.area in rules.area_rules:
                 for requirement in rules.area_rules[location.area]:
                     add_rule(
                         self.get_location(location.name),
-                        lambda state, true_requirement=requirement: state.has(
-                            true_requirement, self.player
-                        ),
+                        lambda state, true_requirement=requirement: state.has(true_requirement, self.player),
                     )
             # Major slots are already Priority, but aren't allowed to have DkMatters
             if location.major_slot:
@@ -500,10 +424,7 @@ class FF4FEWorld(World):
             if location.area in topology.underworld_areas:
                 add_rule(
                     self.get_location(location.name),
-                    lambda state: (
-                        state.has("Hook", self.player)
-                        or state.has("Magma Key", self.player)
-                    ),
+                    lambda state: state.has("Hook", self.player) or state.has("Magma Key", self.player),
                 )
             if location.area in topology.moon_areas:
                 add_rule(
@@ -513,18 +434,13 @@ class FF4FEWorld(World):
                 if self.options.UnsafeKeyItemPlacement:
                     add_rule(
                         self.get_location(location.name),
-                        lambda state: (
-                            state.has("Hook", self.player)
-                            or state.has("Magma Key", self.player)
-                        ),
+                        lambda state: state.has("Hook", self.player) or state.has("Magma Key", self.player),
                     )
             if location.name in rules.boss_rules:
                 for requirement in rules.boss_rules[location.name]:
                     add_rule(
                         self.get_location(location.name),
-                        lambda state, true_requirement=requirement: state.has(
-                            true_requirement, self.player
-                        ),
+                        lambda state, true_requirement=requirement: state.has(true_requirement, self.player),
                     )
             for i in range(len(rules.location_tiers.keys())):
                 if location.area in rules.location_tiers[i]:
@@ -551,26 +467,19 @@ class FF4FEWorld(World):
                 for requirement in rules.individual_location_rules[location]:
                     add_rule(
                         ap_location,
-                        lambda state, true_requirement=requirement: state.has(
-                            true_requirement, self.player
-                        ),
+                        lambda state, true_requirement=requirement: state.has(true_requirement, self.player),
                     )
 
         # Bosses get locked events for spoiler log niceness.
         for event in events.boss_events:
-            self.get_location(event.name).place_locked_item(
-                self.create_event(event.name + " Defeated")
-            )
+            self.get_location(event.name).place_locked_item(self.create_event(event.name + " Defeated"))
 
         # Zeromus also requires the Crystal...when he needs to be fought.
         add_rule(
             self.get_location("Zeromus"),
             lambda state: (
                 state.has("Crystal", self.player)
-                or (
-                    self.options.ObjectiveReward.current_key == "win"
-                    and not self.is_vanilla_game()
-                )
+                or (self.options.ObjectiveReward.current_key == "win" and not self.is_vanilla_game())
             ),
         )
 
@@ -585,26 +494,17 @@ class FF4FEWorld(World):
             for requirement in rules.individual_location_rules["Objectives Status"]:
                 add_rule(
                     self.get_location(f"Objective {i + 1} Status"),
-                    lambda state, true_requirement=requirement: state.has(
-                        true_requirement, self.player
-                    ),
+                    lambda state, true_requirement=requirement: state.has(true_requirement, self.player),
                 )
 
         # Just an event to make the spoiler playthrough look nicer.
         if not self.is_vanilla_game():
-            self.get_location("Objectives Status").place_locked_item(
-                self.create_event("All Objectives Cleared")
-            )
+            self.get_location("Objectives Status").place_locked_item(self.create_event("All Objectives Cleared"))
 
         # If we have no objectives or objectives award the crystal, Zeromus is the win condition.
         # Otherwise, clearing all objectives secures victory.
-        if (
-            self.options.ObjectiveReward.current_key == "crystal"
-            or self.is_vanilla_game()
-        ):
-            self.multiworld.completion_condition[self.player] = lambda state: state.has(
-                "Zeromus Defeated", self.player
-            )
+        if self.options.ObjectiveReward.current_key == "crystal" or self.is_vanilla_game():
+            self.multiworld.completion_condition[self.player] = lambda state: state.has("Zeromus Defeated", self.player)
 
         else:
             self.multiworld.completion_condition[self.player] = lambda state: state.has(
@@ -613,18 +513,14 @@ class FF4FEWorld(World):
 
     @override
     def pre_fill(self) -> None:
-        major_locations = (
-            set(locations.major_location_names) & self.options.priority_locations.value
-        )
+        major_locations = set(locations.major_location_names) & self.options.priority_locations.value
         location_set = set(self.multiworld.get_unfilled_locations()) - {
             self.get_location(location) for location in major_locations
         }
         location_set = sorted(location_set)
         self.random.shuffle(location_set)
         item_pool = self.dark_matters
-        remaining_fill(
-            self.multiworld, location_set, item_pool, check_location_can_fill=True
-        )
+        remaining_fill(self.multiworld, location_set, item_pool, check_location_can_fill=True)
 
     @override
     def get_pre_fill_items(self) -> list["Item"]:
@@ -643,25 +539,18 @@ class FF4FEWorld(World):
         placement_dict = self.create_placement_file(str(self.rom_name_text))
         # We need the seed for FE to be deterministic, but not the same as another player in the game.
         placement_dict["seed"] = self.player + self.multiworld.seed
-        placement_dict["output_file"] = (
-            f"{self.multiworld.get_out_file_name_base(self.player)}" + ".sfc"
-        )
-        placement_dict["flags"] = flags.create_flags_from_options(
-            self.options, self.objective_count
-        )
+        placement_dict["output_file"] = f"{self.multiworld.get_out_file_name_base(self.player)}" + ".sfc"
+        placement_dict["flags"] = flags.create_flags_from_options(self.options, self.objective_count)
         placement_dict["junk_tier"] = self.options.JunkTier.value
         placement_dict["junked_items"] = list(self.options.JunkedItems.value)
         placement_dict["kept_items"] = list(self.options.KeptItems.value)
 
         # Our actual patch is just a set of instructions and data for FE to use.
         patch = FF4FEProcedurePatch(player=self.player, player_name=self.player_name)
-        patch.write_file(
-            "placement_file.json", json.dumps(placement_dict).encode("UTF-8")
-        )
+        patch.write_file("placement_file.json", json.dumps(placement_dict).encode("UTF-8"))
         rom_path = os.path.join(
             output_directory,
-            f"{self.multiworld.get_out_file_name_base(self.player)}"
-            f"{patch.patch_file_ending}",
+            f"{self.multiworld.get_out_file_name_base(self.player)}{patch.patch_file_ending}",
         )
         patch.write(rom_path)
 
@@ -687,10 +576,7 @@ class FF4FEWorld(World):
     ]:
         placement_dict: dict[
             str | int,
-            str
-            | int
-            | dict[str, dict[str, str] | dict[str, str | int] | str]
-            | list[str],
+            str | int | dict[str, dict[str, str] | dict[str, str | int] | str] | list[str],
         ] = {"rom_name": rom_name}
         for location in self.multiworld.get_filled_locations(self.player):
             # Placement dictionary doesn't need AP event logic stuff.
@@ -700,13 +586,9 @@ class FF4FEWorld(World):
                 or location.item == None
             ):
                 continue
-            location_data = [
-                loc for loc in locations.all_locations if loc.name == location.name
-            ].pop()
+            location_data = [loc for loc in locations.all_locations if loc.name == location.name].pop()
             if location.item.player == self.player:
-                item_data = [
-                    item for item in items.all_items if item.name == location.item.name
-                ].pop()
+                item_data = [item for item in items.all_items if item.name == location.item.name].pop()
                 placement_dict[location_data.fe_id] = {
                     "location_data": location_data.to_json(),
                     "item_data": item_data.to_json(),
@@ -732,9 +614,7 @@ class FF4FEWorld(World):
         # we skip in case of error, so that the original error in the output thread is the one that gets raised
         if rom_name:
             new_name = base64.b64encode(bytes(self.rom_name)).decode()
-            multidata["connect_names"][new_name] = multidata["connect_names"][
-                self.multiworld.player_name[self.player]
-            ]
+            multidata["connect_names"][new_name] = multidata["connect_names"][self.multiworld.player_name[self.player]]
 
     @override
     def get_filler_item_name(self) -> str:

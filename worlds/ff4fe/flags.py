@@ -1,4 +1,4 @@
-from . import FF4FEOptions
+from .options import FF4FEOptions
 
 # This file just translates our AP options into FE flagsets.
 
@@ -40,9 +40,7 @@ def build_objective_flags(options: FF4FEOptions, objective_count: int):
         objective_flags += "/win:crystal"
     else:
         objective_flags += "/win:game"
-    objective_flags += (
-        f"/req:{min(objective_count, options.RequiredObjectiveCount.value)}"
-    )
+    objective_flags += f"/req:{min(objective_count, options.RequiredObjectiveCount.value)}"
     return objective_flags
 
 
@@ -71,9 +69,7 @@ def build_characters_flags(options: FF4FEOptions):
     party_size_flags = f"Cparty:{options.PartySize}/"
     hero_challenge_flags = ""
     if options.HeroChallenge.current_key != "none":
-        hero_challenge_flags = (
-            f"hero/start:{options.HeroChallenge.current_key.lower()}/"
-        )
+        hero_challenge_flags = f"hero/start:{options.HeroChallenge.current_key.lower()}/"
     free_character_flags = ""
     if options.NoFreeCharacters:
         free_character_flags += "nofree/"
@@ -168,16 +164,15 @@ def build_starter_kit_flags(options: FF4FEOptions):
 def process_kit_name(kit: str):
     if kit == "grab_bag":
         return "grabbag"
-    elif kit == "MIAB":
+    if kit == "MIAB":
         return "miab"
-    elif kit == "not_deme":
+    if kit == "not_deme":
         return "notdeme"
-    elif kit == "green_names":
+    if kit == "green_names":
         return "green"
-    elif kit == "random_kit":
+    if kit == "random_kit":
         return "random"
-    else:
-        return kit
+    return kit
 
 
 def process_wacky_name(wacky: str):

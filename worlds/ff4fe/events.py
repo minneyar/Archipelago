@@ -79,5 +79,4 @@ boss_events: list[LocationData] = []
 boss_status_events = {boss: (f"{boss} Defeated") for boss in boss_names}
 boss_slots = [(f"{boss} Slot Defeated") for boss in boss_names]
 
-for event in boss_event_data:
-    boss_events.append(LocationData(event[2], event[0], event[1], 0xFFFF, True))
+boss_events = [LocationData(event[2], event[0], event[1], 0xFFFF, True) for event in boss_event_data]

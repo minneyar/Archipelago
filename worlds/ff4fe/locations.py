@@ -3,7 +3,7 @@ from typing import final, override
 
 from BaseClasses import Location
 
-from . import csvdb
+from .csvdb import CsvDb
 
 
 @final
@@ -20,9 +20,7 @@ class LocationData:
     fe_id: int
     major_slot: bool
 
-    def __init__(
-        self, name: str, surface: str, area: str, fe_id: int, major_slot: bool
-    ):
+    def __init__(self, name: str, surface: str, area: str, fe_id: int, major_slot: bool):
         self.name = name
         self.surface = surface
         self.area = area
@@ -39,64 +37,46 @@ class LocationData:
 
 all_locations: list[LocationData] = []
 
-locationscsv = csvdb.CsvDb(
-    pkgutil.get_data(__name__, "data/treasure.csvdb").decode().splitlines()
-)
+locationscsv = CsvDb(pkgutil.get_data(__name__, "data/treasure.csvdb").decode().splitlines())
 
 for location in locationscsv.create_view():
     if location.exclude != "":
         if location.exclude == "key":
             # Rat Tail and Ribbon chests are a little special in FE, as they're treasure chests but are considered
             # major reward locations.
-            new_location = LocationData(
-                "", location.world, location.area, int(location.flag, 16), True
-            )
+            new_location = LocationData("", location.world, location.area, int(location.flag, 16), True)
             if location.world == "Underworld":  # Rat Tail location
                 new_location.name = "Town of Monsters -- B4F (first area) -- Rat Tail"
             if location.world == "Moon":  # Ribbon location
                 if location.x == "2":  # Left Ribbon
-                    new_location.name = (
-                        "Lunar Subterrane -- B7 (right room) -- Ribbon Left"
-                    )
+                    new_location.name = "Lunar Subterrane -- B7 (right room) -- Ribbon Left"
                 else:  # Right Ribbon
-                    new_location.name = (
-                        "Lunar Subterrane -- B7 (right room) -- Ribbon Right"
-                    )
+                    new_location.name = "Lunar Subterrane -- B7 (right room) -- Ribbon Right"
             all_locations.append(new_location)
         continue
-    new_location = LocationData(
-        "", location.world, location.area, int(location.flag, 16), False
-    )
+    new_location = LocationData("", location.world, location.area, int(location.flag, 16), False)
     subname = f"{((' -- ' + location.spoilersubarea) if location.spoilersubarea != '' else '')}"
     new_location.name = f"{location.spoilerarea}{subname} -- {location.spoilerdetail}"
     all_locations.append(new_location)
 
-minor_locations = [
-    location for location in all_locations if location.major_slot == False
-]
+minor_locations = [location for location in all_locations if location.major_slot == False]
 minor_location_names = [location.name for location in minor_locations]
 
 # This is actually a custom data table for the reward locations, mimicking the format of the treasure locations.
-locationscsv = csvdb.CsvDb(
-    pkgutil.get_data(__name__, "data/rewardslots.csvdb").decode().splitlines()
-)
+locationscsv = CsvDb(pkgutil.get_data(__name__, "data/rewardslots.csvdb").decode().splitlines())
 
 miab_slots: list[str] = []
 
 for location in locationscsv.create_view():
     # All reward locations are given their ID plus 512 so we can't confuse them with regular chests.
-    new_location = LocationData(
-        "", location.world, location.area, int(location.fecode, 16) + 0x200, True
-    )
+    new_location = LocationData("", location.world, location.area, int(location.fecode, 16) + 0x200, True)
     subname = f"{((' -- ' + location.spoilersubarea) if location.spoilersubarea != '' else '')}"
     new_location.name = f"{location.spoilerarea}{subname} -- {location.spoilerdetail}"
     if "Monster in a Box" in new_location.name:
         miab_slots.append(new_location.name)
     all_locations.append(new_location)
 
-major_locations = [
-    location for location in all_locations if location.major_slot == True
-]
+major_locations = [location for location in all_locations if location.major_slot == True]
 major_location_names = [location.name for location in major_locations]
 
 character_slots = [
@@ -155,16 +135,10 @@ restricted_character_locations = [
 
 for location in character_slots:
     # Just like event reward locations, character locations get a constant added to separate them from treasures.
-    all_locations.append(
-        LocationData(location[0], location[1], location[2], location[3] + 0x200, True)
-    )
+    all_locations.append(LocationData(location[0], location[1], location[2], location[3] + 0x200, True))
 
-all_locations.append(
-    LocationData("Objectives Status", "Overworld", "BaronTown", 0xEEEE, False)
-)
-all_locations.append(
-    LocationData("Objective Reward", "Overworld", "BaronTown", 0xEEEF, False)
-)
+all_locations.append(LocationData("Objectives Status", "Overworld", "BaronTown", 0xEEEE, False))
+all_locations.append(LocationData("Objective Reward", "Overworld", "BaronTown", 0xEEEF, False))
 
 areas: list[str] = []
 
@@ -238,10 +212,7 @@ for location in all_locations:
     for area_name in area_names:
         if area_name not in area_groups:
             area_groups[area_name] = set()
-        if (
-            location.name not in character_locations
-            and "Objective" not in location.name
-        ):
+        if location.name not in character_locations and "Objective" not in location.name:
             area_groups[area_name].add(location.name)
 
 area_groups["MIABs"] = set()
@@ -249,11 +220,7 @@ for location in miab_slots:
     area_groups["MIABs"].add(location)
 
 for i in range(32):
-    all_locations.append(
-        LocationData(
-            f"Objective {i + 1} Status", "Overworld", "BaronTown", 0xEE00 + i, False
-        )
-    )
+    all_locations.append(LocationData(f"Objective {i + 1} Status", "Overworld", "BaronTown", 0xEE00 + i, False))
 
 
 class Curve:
@@ -289,9 +256,7 @@ class Curve:
 
 areas_curves: dict[str, Curve] = {}
 
-curves = csvdb.CsvDb(
-    pkgutil.get_data(__name__, "data/curves.csvdb").decode().splitlines()
-).create_view()
+curves = CsvDb(pkgutil.get_data(__name__, "data/curves.csvdb").decode().splitlines()).create_view()
 
 for area in areas:
     area_curves = curves.find_one(lambda l: l.area == area)
@@ -309,6 +274,4 @@ for area in areas:
 
 
 def get_location_data(location_name: str):
-    return [
-        location for location in all_locations if location.name == location_name
-    ].pop()
+    return [location for location in all_locations if location.name == location_name].pop()

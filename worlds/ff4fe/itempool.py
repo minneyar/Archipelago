@@ -1,7 +1,6 @@
 import typing
 
-from . import items
-from .items import ItemData
+from .items import ItemData, characters, filler_items, get_item_data, items_by_tier, key_items, useful_items
 from .locations import (
     LocationData,
     areas_curves,
@@ -16,14 +15,10 @@ if typing.TYPE_CHECKING:
     from . import FF4FEWorld
 
 
-def create_itempool(
-    locations: list[LocationData], world: "FF4FEWorld"
-) -> tuple[list[str], str, str]:
+def create_itempool(locations: list[LocationData], world: "FF4FEWorld") -> tuple[list[str], str, str]:
     character_pool, chosen_character, second_starter = create_character_pool(world)
     key_item_pool = create_key_item_pool(world)
-    location_count = (
-        len(locations) - len(character_pool) - len(key_item_pool) - 34
-    )  # Objective Status locations
+    location_count = len(locations) - len(character_pool) - len(key_item_pool) - 34  # Objective Status locations
     if world.is_vanilla_game():
         location_count -= 1  # We aren't using the Objective Reward location.
     result_pool: list[str] = []
@@ -37,18 +32,12 @@ def create_character_pool(world: "FF4FEWorld") -> tuple[list[str], str, str]:
     all_allowed_characters = world.options.AllowedCharacters.value
     if len(all_allowed_characters) == 0:
         all_allowed_characters = {"Cecil"}
-    allowed_starter_characters = (
-        all_allowed_characters - world.options.RestrictedCharacters.value
-    )
+    allowed_starter_characters = all_allowed_characters - world.options.RestrictedCharacters.value
     if world.options.HeroChallenge.current_key != "none":
         option_value = str(world.options.HeroChallenge.current_key)
         if option_value == "random_character":
             starter = world.random.choice(
-                [
-                    character_choice
-                    for character_choice in items.characters
-                    if character_choice != "None"
-                ]
+                [character_choice for character_choice in characters if character_choice != "None"]
             )
         else:
             starter = option_value.capitalize()
@@ -57,9 +46,7 @@ def create_character_pool(world: "FF4FEWorld") -> tuple[list[str], str, str]:
         if len(allowed_starter_characters) > 0:
             starter = world.random.choice(sorted(allowed_starter_characters))
         else:
-            starter = (
-                "Cecil"  # If we restrict all allowable characters, default to Cecil
-            )
+            starter = "Cecil"  # If we restrict all allowable characters, default to Cecil
     if world.options.AllowDuplicateCharacters:
         if len(allowed_starter_characters) > 0:
             second = world.random.choice(sorted(allowed_starter_characters))
@@ -88,24 +75,16 @@ def create_character_pool(world: "FF4FEWorld") -> tuple[list[str], str, str]:
             filled_slots += len(all_allowed_characters)
         if len(all_allowed_characters) == 0:
             all_allowed_characters = [starter]
-        character_pool.extend(
-            world.random.choices(
-                sorted(all_allowed_characters), k=(slots_to_fill - filled_slots)
-            )
-        )
+        character_pool.extend(world.random.choices(sorted(all_allowed_characters), k=(slots_to_fill - filled_slots)))
     else:
-        character_pool.extend(
-            world.random.sample(
-                sorted(all_allowed_characters), slots_to_fill - filled_slots
-            )
-        )
+        character_pool.extend(world.random.sample(sorted(all_allowed_characters), slots_to_fill - filled_slots))
     for x in range(len(character_pool), slots_to_fill):
         character_pool.append("None")
     return character_pool, starter, second
 
 
 def create_key_item_pool(world: "FF4FEWorld") -> list[str]:
-    key_item_pool = [item.name for item in items.key_items]
+    key_item_pool = [item.name for item in key_items]
     if not world.options.PassEnabled:
         key_item_pool.remove("Pass")
     return key_item_pool
@@ -113,26 +92,18 @@ def create_key_item_pool(world: "FF4FEWorld") -> list[str]:
 
 def create_general_pool(world: "FF4FEWorld", location_count: int, key_item_count: int):
     if world.options.WackyChallenge.current_key == "kleptomania":
-        refined_filler = [
-            item for item in items.filler_items if item.group not in ["weapon", "armor"]
-        ]
-        refined_useful = [
-            item for item in items.useful_items if item.group not in ["weapon", "armor"]
-        ]
+        refined_filler = [item for item in filler_items if item.group not in ["weapon", "armor"]]
+        refined_useful = [item for item in useful_items if item.group not in ["weapon", "armor"]]
     else:
-        refined_filler = [*items.filler_items]
-        refined_useful = [*items.useful_items]
+        refined_filler = [*filler_items]
+        refined_useful = [*useful_items]
     if world.options.NoAdamantArmors:
         try:
-            refined_useful.remove(items.get_item_data("Adamant Armor"))
+            refined_useful.remove(get_item_data("Adamant Armor"))
         except ValueError:  # This will happen in Kleptomaniac seeds.
             pass
-    refined_filler = [
-        item for item in refined_filler if item.tier >= world.options.MinTier.value
-    ]
-    refined_useful = [
-        item for item in refined_useful if item.tier <= world.options.MaxTier.value
-    ]
+    refined_filler = [item for item in refined_filler if item.tier >= world.options.MinTier.value]
+    refined_useful = [item for item in refined_useful if item.tier <= world.options.MaxTier.value]
     refined_set = [*refined_useful, *refined_filler]
     if world.options.ItemRandomization.current_key == "standard":
         refined_set = [item for item in refined_set if item.tier < 6]
@@ -140,14 +111,11 @@ def create_general_pool(world: "FF4FEWorld", location_count: int, key_item_count
     if world.options.HeroChallenge != "none" and not world.options.ForgeTheCrystal:
         required_useful_count -= 1
     extra_filler_locations = sorted(
-        world.options.exclude_locations.value
-        & {location.name for location in major_locations}
+        world.options.exclude_locations.value & {location.name for location in major_locations}
     )
     if not world.is_vanilla_game():
         required_useful_count += 1
-    item_pool = world.random.choices(
-        refined_useful, k=required_useful_count - key_item_count
-    )
+    item_pool = world.random.choices(refined_useful, k=required_useful_count - key_item_count)
     location_list: list[LocationData] = []
     for location in minor_locations:
         if location.name not in world.options.priority_locations.value:
@@ -155,7 +123,7 @@ def create_general_pool(world: "FF4FEWorld", location_count: int, key_item_count
     world.random.shuffle(location_list)
     if world.options.FindTheDarkMatter:
         dark_matter_count = 45
-        dark_matter_item = items.get_item_data("DkMatter")
+        dark_matter_item = get_item_data("DkMatter")
         for i in range(dark_matter_count):
             location_list.pop()
             item_pool.append(dark_matter_item)
@@ -176,9 +144,7 @@ def create_general_pool(world: "FF4FEWorld", location_count: int, key_item_count
 tiers = [0, 1, 2, 3, 4, 5, 6, 7]
 
 
-def choose_item_by_weight(
-    world: "FF4FEWorld", location: LocationData, item_set: list[ItemData]
-) -> ItemData:
+def choose_item_by_weight(world: "FF4FEWorld", location: LocationData, item_set: list[ItemData]) -> ItemData:
     area_curve = areas_curves[location.area]
     if world.options.ItemRandomization.current_key == "pro":
         tier_weights = [
@@ -203,8 +169,8 @@ def choose_item_by_weight(
             (int(area_curve.tier7) * 7 // 8) + int(area_curve.tier8),
         ]
     chosen_tier = world.random.choices(tiers, tier_weights, k=1)[0]
-    chosen_item = world.random.choice(items.items_by_tier[chosen_tier])
+    chosen_item = world.random.choice(items_by_tier[chosen_tier])
     while chosen_item not in item_set:
         chosen_tier = world.random.choices(tiers, tier_weights, k=1)[0]
-        chosen_item = world.random.choice(items.items_by_tier[chosen_tier])
+        chosen_item = world.random.choice(items_by_tier[chosen_tier])
     return chosen_item

@@ -4,7 +4,6 @@ from logging import Logger
 from typing import Any, final, override
 
 from NetUtils import ClientStatus
-
 from worlds.AutoSNIClient import SNIClient
 
 from . import items, locations
@@ -59,7 +58,7 @@ class FF4FEClient(SNIClient):
 
         # We check victory before the connection check because victory is set in a cutscene.
         # Thus, we would no longer be in a "valid" state to send or receive items.
-        if await self.connection_check(ctx) == False:
+        if not await self.connection_check(ctx):
             return
         await self.location_check(ctx)
         await self.reward_check(ctx)
@@ -90,54 +89,40 @@ class FF4FEClient(SNIClient):
             from . import FF4FEWorld
 
             self.key_item_names = {
-                item: id
-                for item, id in FF4FEWorld.item_name_to_id.items()
-                if item in items.key_item_names
+                item: id for item, id in FF4FEWorld.item_name_to_id.items() if item in items.key_item_names
             }
 
         if self.key_items_with_flags is None:
             from . import FF4FEWorld
 
             self.key_items_with_flags = {
-                item: id
-                for item, id in FF4FEWorld.item_name_to_id.items()
-                if item in Rom.special_flag_key_items
+                item: id for item, id in FF4FEWorld.item_name_to_id.items() if item in Rom.special_flag_key_items
             }
 
         if self.junked_items is None:
-            junked_items_length_data = await snes_read(
-                ctx, Rom.junked_items_length_byte, 1
-            )
+            junked_items_length_data = await snes_read(ctx, Rom.junked_items_length_byte, 1)
             if junked_items_length_data is None:
-                return
+                return None
             junked_items_array_length = junked_items_length_data[0]
-            junked_items_array_data = await snes_read(
-                ctx, Rom.junked_items_array_start, junked_items_array_length
-            )
+            junked_items_array_data = await snes_read(ctx, Rom.junked_items_array_start, junked_items_array_length)
             if junked_items_array_data is None:
-                return
+                return None
             self.junked_items = []
             for item_byte in junked_items_array_data:
-                item_data = [
-                    item for item in items.all_items if item.fe_id == item_byte
-                ].pop()
+                item_data = [item for item in items.all_items if item.fe_id == item_byte].pop()
                 self.junked_items.append(item_data.name)
 
         if self.kept_items is None:
             kept_items_length_data = await snes_read(ctx, Rom.kept_items_length_byte, 1)
             if kept_items_length_data is None:
-                return
+                return None
             kept_items_array_length = kept_items_length_data[0]
-            kept_items_array_data = await snes_read(
-                ctx, Rom.kept_items_array_start, kept_items_array_length
-            )
+            kept_items_array_data = await snes_read(ctx, Rom.kept_items_array_start, kept_items_array_length)
             if kept_items_array_data is None:
-                return
+                return None
             self.kept_items = []
             for item_byte in kept_items_array_data:
-                item_data = [
-                    item for item in items.all_items if item.fe_id == item_byte
-                ].pop()
+                item_data = [item for item in items.all_items if item.fe_id == item_byte].pop()
                 self.kept_items.append(item_data.name)
 
         await self.check_victory(ctx)
@@ -181,9 +166,7 @@ class FF4FEClient(SNIClient):
     async def location_check(self, ctx: SNIContext):
         from SNIClient import snes_read
 
-        treasure_data = await snes_read(
-            ctx, Rom.treasure_found_locations_start, Rom.treasure_found_size
-        )
+        treasure_data = await snes_read(ctx, Rom.treasure_found_locations_start, Rom.treasure_found_size)
         if treasure_data is None or not self.location_name_to_id:
             return False
         # Go through every treasure, and if it's been opened, find the location and send it if need be.
@@ -192,11 +175,7 @@ class FF4FEClient(SNIClient):
             bit = i % 8
             checked = treasure_data[byte] & (2**bit)
             if checked > 0:
-                treasure_found = [
-                    treasure
-                    for treasure in locations.all_locations
-                    if treasure.fe_id == i
-                ]
+                treasure_found = [treasure for treasure in locations.all_locations if treasure.fe_id == i]
                 if len(treasure_found) > 0:
                     treasure_found = treasure_found.pop()
                     location_id = self.location_name_to_id[treasure_found.name]
@@ -205,16 +184,12 @@ class FF4FEClient(SNIClient):
                         snes_logger.info(
                             f"New Check: {treasure_found.name} ({len(ctx.locations_checked)}/{len(ctx.missing_locations) + len(ctx.checked_locations)})"
                         )
-                        await ctx.send_msgs(
-                            [{"cmd": "LocationChecks", "locations": [location_id]}]
-                        )
+                        await ctx.send_msgs([{"cmd": "LocationChecks", "locations": [location_id]}])
 
     async def reward_check(self, ctx: SNIContext):
         from SNIClient import snes_read
 
-        reward_data = await snes_read(
-            ctx, Rom.checked_reward_locations_start, Rom.checked_reward_size
-        )
+        reward_data = await snes_read(ctx, Rom.checked_reward_locations_start, Rom.checked_reward_size)
         if reward_data is None or not self.location_name_to_id:
             return False
         # Same as the treasure location check.
@@ -225,11 +200,7 @@ class FF4FEClient(SNIClient):
             if i == 1:
                 checked = 1  # FE never actually flags your starting character as obtained, amazingly
             if checked > 0:
-                reward_found = [
-                    reward
-                    for reward in locations.all_locations
-                    if reward.fe_id == i + 0x200
-                ]
+                reward_found = [reward for reward in locations.all_locations if reward.fe_id == i + 0x200]
                 if len(reward_found) > 0:
                     reward_found = reward_found.pop()
                     location_id = self.location_name_to_id[reward_found.name]
@@ -239,9 +210,7 @@ class FF4FEClient(SNIClient):
                             f"New Check: {reward_found.name} "
                             f"({len(ctx.locations_checked)}/{len(ctx.missing_locations) + len(ctx.checked_locations)})"
                         )
-                        await ctx.send_msgs(
-                            [{"cmd": "LocationChecks", "locations": [location_id]}]
-                        )
+                        await ctx.send_msgs([{"cmd": "LocationChecks", "locations": [location_id]}])
         if self.no_free_characters:
             for location in locations.free_character_locations:
                 location_id = self.location_name_to_id[location]
@@ -251,9 +220,7 @@ class FF4FEClient(SNIClient):
                         f"New Check: {location} "
                         f"({len(ctx.locations_checked)}/{len(ctx.missing_locations) + len(ctx.checked_locations)})"
                     )
-                    await ctx.send_msgs(
-                        [{"cmd": "LocationChecks", "locations": [location_id]}]
-                    )
+                    await ctx.send_msgs([{"cmd": "LocationChecks", "locations": [location_id]}])
         if self.no_earned_characters:
             for location in locations.earned_character_locations:
                 location_id = self.location_name_to_id[location]
@@ -263,9 +230,7 @@ class FF4FEClient(SNIClient):
                         f"New Check: {location} "
                         f"({len(ctx.locations_checked)}/{len(ctx.missing_locations) + len(ctx.checked_locations)})"
                     )
-                    await ctx.send_msgs(
-                        [{"cmd": "LocationChecks", "locations": [location_id]}]
-                    )
+                    await ctx.send_msgs([{"cmd": "LocationChecks", "locations": [location_id]}])
 
     async def objective_check(self, ctx: SNIContext):
         from SNIClient import snes_read
@@ -283,10 +248,8 @@ class FF4FEClient(SNIClient):
             return False
         objective_count = objective_count_data[0]
         if objective_count == 0:
-            return
-        objectives_needed_count_data = await snes_read(
-            ctx, Rom.objectives_needed_count_location, 1
-        )
+            return None
+        objectives_needed_count_data = await snes_read(ctx, Rom.objectives_needed_count_location, 1)
         if objectives_needed_count_data is None:
             return False
         objectives_needed = objectives_needed_count_data[0]
@@ -301,9 +264,7 @@ class FF4FEClient(SNIClient):
                         f"New Check: Objective {i + 1} Cleared! "
                         f"({len(ctx.locations_checked)}/{len(ctx.missing_locations) + len(ctx.checked_locations)})"
                     )
-                    await ctx.send_msgs(
-                        [{"cmd": "LocationChecks", "locations": [location_id]}]
-                    )
+                    await ctx.send_msgs([{"cmd": "LocationChecks", "locations": [location_id]}])
         # Check if we've cleared the required number of objectives, and send the appropriate location if so.
         # If this results in victory, that check is handled elsewhere.
         objectives_cleared = 0
@@ -333,17 +294,13 @@ class FF4FEClient(SNIClient):
     async def received_items_check(self, ctx: SNIContext):
         from SNIClient import snes_buffered_write, snes_read
 
-        items_received_data = await snes_read(
-            ctx, Rom.items_received_location_start, Rom.items_received_size
-        )
+        items_received_data = await snes_read(ctx, Rom.items_received_location_start, Rom.items_received_size)
         if items_received_data is None:
             return
         items_received_amount = int.from_bytes(items_received_data, "big")
         if items_received_amount >= len(ctx.items_received):
             return
-        inventory_data = await snes_read(
-            ctx, Rom.inventory_start_location, Rom.inventory_size
-        )
+        inventory_data = await snes_read(ctx, Rom.inventory_start_location, Rom.inventory_size)
         if inventory_data is None:
             return
         junk_tier_data = await snes_read(ctx, Rom.junk_tier_byte, 1)
@@ -357,12 +314,8 @@ class FF4FEClient(SNIClient):
         item_received = ctx.items_received[items_received_amount]
         item_received_id = item_received.item
         item_received_name = ctx.item_names.lookup_in_game(item_received_id, ctx.game)
-        item_received_location_name = ctx.location_names.lookup_in_slot(
-            item_received.location, item_received.player
-        )
-        item_received_game_data = [
-            item for item in items.all_items if item.name == item_received_name
-        ].pop()
+        item_received_location_name = ctx.location_names.lookup_in_slot(item_received.location, item_received.player)
+        item_received_game_data = [item for item in items.all_items if item.name == item_received_name].pop()
         item_received_game_id = item_received_game_data.fe_id
         # Characters are handled entirely ingame, for now
         if item_received_name in items.characters:
@@ -400,10 +353,9 @@ class FF4FEClient(SNIClient):
             self.increment_items_received(ctx, items_received_amount)
             return
         # Any item that hits our junk tier settings is automatically sold.
-        if (
-            item_received_name in items.sellable_item_names
-            and item_received.location >= 0
-        ) and self.check_junk_item(item_received_game_data, junk_tier_data[0]):
+        if (item_received_name in items.sellable_item_names and item_received.location >= 0) and self.check_junk_item(
+            item_received_game_data, junk_tier_data[0]
+        ):
             # The Time is Money wacky prevents us from getting cash through any means other than time.
             time_is_money = False if time_is_money_data[0] != 0 else True
             # Item sale prices are capped at 127000 GP.
@@ -411,9 +363,7 @@ class FF4FEClient(SNIClient):
                 item_received_game_data.price // 2,
                 127000 if not time_is_money else 0,
             )
-            current_gp_data = await snes_read(
-                ctx, Rom.gp_byte_location, Rom.gp_byte_size
-            )
+            current_gp_data = await snes_read(ctx, Rom.gp_byte_location, Rom.gp_byte_size)
             if current_gp_data is None:
                 return
             current_gp_amount = int.from_bytes(current_gp_data, "little")
@@ -434,9 +384,7 @@ class FF4FEClient(SNIClient):
                     item_received_location_name,
                 )
             )
-            snes_logger.info(
-                f"Automatically sold {item_received_name} for {item_price} GP."
-            )
+            snes_logger.info(f"Automatically sold {item_received_name} for {item_price} GP.")
             return
         # If we've made it this far, this is an item that actually goes in the inventory.
         for i, byte in enumerate(inventory_data):
@@ -444,9 +392,7 @@ class FF4FEClient(SNIClient):
             if i % 2 == 1:
                 continue
             # We need a free slot or a slot that already has our item (if Unstackable wacky isn't in play)
-            if byte == 0 or (
-                byte == item_received_game_id and "unstackable" not in self.flags
-            ):
+            if byte == 0 or (byte == item_received_game_id and "unstackable" not in self.flags):
                 snes_buffered_write(
                     ctx,
                     Rom.inventory_start_location + i,
@@ -456,28 +402,15 @@ class FF4FEClient(SNIClient):
                     snes_buffered_write(
                         ctx,
                         Rom.inventory_start_location + i + 1,
-                        bytes(
-                            [
-                                10
-                                if (
-                                    "Arrows" in item_received_name
-                                    and "unstackable" not in self.flags
-                                )
-                                else 1
-                            ]
-                        ),
+                        bytes([10 if ("Arrows" in item_received_name and "unstackable" not in self.flags) else 1]),
                     )
                 else:
                     item_count = inventory_data[i + 1]
                     item_count = min(
-                        (item_count + 10)
-                        if "Arrows" in item_received_name
-                        else (item_count + 1),
+                        (item_count + 10) if "Arrows" in item_received_name else (item_count + 1),
                         99,
                     )
-                    snes_buffered_write(
-                        ctx, Rom.inventory_start_location + i + 1, bytes([item_count])
-                    )
+                    snes_buffered_write(ctx, Rom.inventory_start_location + i + 1, bytes([item_count]))
                 self.increment_items_received(ctx, items_received_amount)
 
                 snes_logger.info(
@@ -493,9 +426,7 @@ class FF4FEClient(SNIClient):
     async def check_victory(self, ctx: SNIContext):
         from SNIClient import snes_read
 
-        for sentinel in (
-            Rom.sentinel_addresses
-        ):  # Defend against RAM initialized to static values everywhere.
+        for sentinel in Rom.sentinel_addresses:  # Defend against RAM initialized to static values everywhere.
             sentinel_data = await snes_read(ctx, sentinel, 1)
             if sentinel_data is None:
                 return
@@ -506,23 +437,15 @@ class FF4FEClient(SNIClient):
         if victory_data is None:
             return
         if victory_data[0] > 0 and not ctx.finished_game:
-            await ctx.send_msgs(
-                [{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]
-            )
+            await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
             ctx.finished_game = True
 
     async def resolve_key_items(self, ctx: SNIContext):
         # We need to write key items into the ingame tracker.
         from SNIClient import snes_buffered_write, snes_read
 
-        tracker_data = await snes_read(
-            ctx, Rom.key_items_tracker_start_location, Rom.key_items_tracker_size
-        )
-        if (
-            tracker_data is None
-            or self.key_item_names is None
-            or self.key_items_with_flags is None
-        ):
+        tracker_data = await snes_read(ctx, Rom.key_items_tracker_start_location, Rom.key_items_tracker_size)
+        if tracker_data is None or self.key_item_names is None or self.key_items_with_flags is None:
             return
         new_tracker_bytes = bytearray(tracker_data[: Rom.key_items_tracker_size])
         key_items_collected = [
@@ -545,13 +468,9 @@ class FF4FEClient(SNIClient):
                     # The bitwise AND isn't an error: there's a flag that can erroneously get set that stops us from
                     # flying the airship.
                     # Which is bad.
-                    hook_received_value = (
-                        hook_received_value & Rom.airship_flyable_flag[1]
-                    )
+                    hook_received_value = hook_received_value & Rom.airship_flyable_flag[1]
                     snes_buffered_write(ctx, flag_byte, bytes([hook_received_value]))
-                    drill_attached_data = await snes_read(
-                        ctx, Rom.drill_attached_flag[0], 1
-                    )
+                    drill_attached_data = await snes_read(ctx, Rom.drill_attached_flag[0], 1)
                     if drill_attached_data is None:
                         return
                     drill_attached_value = drill_attached_data[0]
@@ -586,9 +505,7 @@ class FF4FEClient(SNIClient):
                 Rom.key_items_tracker_start_location + i,
                 bytes([new_tracker_bytes[i]]),
             )
-        snes_buffered_write(
-            ctx, Rom.key_items_found_location, bytes([len(key_items_collected)])
-        )
+        snes_buffered_write(ctx, Rom.key_items_found_location, bytes([len(key_items_collected)]))
 
     def check_junk_item(self, item_received_game_data: items.ItemData, junk_tier: int):
         if self.kept_items and item_received_game_data.name in self.kept_items:
@@ -604,6 +521,4 @@ class FF4FEClient(SNIClient):
         lower_byte = new_count % 256
         upper_byte = new_count // 256
         snes_buffered_write(ctx, Rom.items_received_location_start, bytes([upper_byte]))
-        snes_buffered_write(
-            ctx, Rom.items_received_location_start + 1, bytes([lower_byte])
-        )
+        snes_buffered_write(ctx, Rom.items_received_location_start + 1, bytes([lower_byte]))
