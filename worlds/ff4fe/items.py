@@ -155,11 +155,7 @@ key_items = [
     if (item.classification == ItemClassification.progression or item.name == "Spoon") and item.name not in characters
 ]
 
-key_item_names = [
-    item.name
-    for item in all_items
-    if (item.classification == ItemClassification.progression or item.name == "Spoon") and item.name not in characters
-]
+key_item_names = [item.name for item in key_items]
 
 key_items_tracker_order = [
     "Package",
@@ -192,8 +188,8 @@ item_name_groups = {
 }
 
 
-for i in range(32):
-    all_items.append(
+all_items.extend(
+    [
         ItemData(
             f"Objective {i + 1} Cleared",
             ItemClassification.progression,
@@ -201,7 +197,9 @@ for i in range(32):
             0,
             "objective",
         )
-    )
+        for i in range(32)
+    ]
+)
 
 
 def get_item_data(item_name: str):

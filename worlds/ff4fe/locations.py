@@ -76,7 +76,7 @@ for location in locationscsv.create_view():
         miab_slots.append(new_location.name)
     all_locations.append(new_location)
 
-major_locations = [location for location in all_locations if location.major_slot == True]
+major_locations = [location for location in all_locations if location.major_slot]
 major_location_names = [location.name for location in major_locations]
 
 character_slots = [
@@ -133,9 +133,10 @@ restricted_character_locations = [
     "Mt. Hobs Character",
 ]
 
-for location in character_slots:
-    # Just like event reward locations, character locations get a constant added to separate them from treasures.
-    all_locations.append(LocationData(location[0], location[1], location[2], location[3] + 0x200, True))
+# Just like event reward locations, character locations get a constant added to separate them from treasures.
+all_locations.extend(
+    [LocationData(location[0], location[1], location[2], location[3] + 0x200, True) for location in character_slots]
+)
 
 all_locations.append(LocationData("Objectives Status", "Overworld", "BaronTown", 0xEEEE, False))
 all_locations.append(LocationData("Objective Reward", "Overworld", "BaronTown", 0xEEEF, False))
@@ -219,8 +220,9 @@ area_groups["MIABs"] = set()
 for location in miab_slots:
     area_groups["MIABs"].add(location)
 
-for i in range(32):
-    all_locations.append(LocationData(f"Objective {i + 1} Status", "Overworld", "BaronTown", 0xEE00 + i, False))
+all_locations.extend(
+    [LocationData(f"Objective {i + 1} Status", "Overworld", "BaronTown", 0xEE00 + i, False) for i in range(32)]
+)
 
 
 class Curve:

@@ -1,14 +1,14 @@
 import typing
 
-from .items import ItemData, characters, filler_items, get_item_data, items_by_tier, key_items, useful_items
+from .items import ItemData, characters, filler_items, get_item_data, items_by_tier, key_item_names, useful_items
 from .locations import (
     LocationData,
+    all_locations,
     areas_curves,
     earned_character_locations,
     free_character_locations,
     get_location_data,
     major_locations,
-    minor_locations,
 )
 
 if typing.TYPE_CHECKING:
@@ -84,7 +84,7 @@ def create_character_pool(world: "FF4FEWorld") -> tuple[list[str], str, str]:
 
 
 def create_key_item_pool(world: "FF4FEWorld") -> list[str]:
-    key_item_pool = [item.name for item in key_items]
+    key_item_pool = list(key_item_names)
     if not world.options.PassEnabled:
         key_item_pool.remove("Pass")
     return key_item_pool
@@ -116,10 +116,9 @@ def create_general_pool(world: "FF4FEWorld", location_count: int, key_item_count
     if not world.is_vanilla_game():
         required_useful_count += 1
     item_pool = world.random.choices(refined_useful, k=required_useful_count - key_item_count)
-    location_list: list[LocationData] = []
-    for location in minor_locations:
-        if location.name not in world.options.priority_locations.value:
-            location_list.append(location)
+    location_list = [
+        location for location in all_locations if location.name not in world.options.priority_locations.value
+    ]
     world.random.shuffle(location_list)
     if world.options.FindTheDarkMatter:
         dark_matter_count = 45

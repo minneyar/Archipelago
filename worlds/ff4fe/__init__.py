@@ -103,11 +103,9 @@ class FF4FEWorld(World):
 
     @override
     def generate_early(self) -> None:
-        self.options.priority_locations.value = self.options.priority_locations.value | (
-            set(locations.major_location_names) - self.options.exclude_locations.value
-        )
+        self.options.priority_locations.value -= self.options.exclude_locations.value
         if self.options.ForgeTheCrystal:
-            self.options.priority_locations.value -= {"Kokkol's House 2F -- Kokkol -- forge item"}
+            self.options.priority_locations.value.remove("Kokkol's House 2F -- Kokkol -- forge item")
 
     @override
     def create_regions(self) -> None:
@@ -415,7 +413,7 @@ class FF4FEWorld(World):
                     )
 
         # Boss events follow the same rules, but they're not real locations.
-        for location in [event for event in events.boss_events]:
+        for location in events.boss_events:
             if location.area in topology.hook_areas:
                 add_rule(
                     self.get_location(location.name),
