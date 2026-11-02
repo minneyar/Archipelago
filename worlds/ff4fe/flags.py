@@ -1,23 +1,28 @@
 from . import FF4FEOptions
+
 # This file just translates our AP options into FE flagsets.
 
+
 def create_flags_from_options(options: FF4FEOptions, objective_count: int):
-    flags = (f"{build_objective_flags(options, objective_count)} "
-             f"Kmain/summon/moon/unsafe/miab "
-             f"{build_pass_flags(options)} "
-             f"{build_characters_flags(options)} "
-             f"Twild/junk "
-             f"{build_shops_flags(options)} "
-             f"{build_bosses_flags(options)} "
-             f"{build_encounters_flags(options)} "
-             f"Gdupe/mp/warp/life/sylph/backrow "
-             f"{build_misc_flags(options)}"
-             f"{build_starter_kit_flags(options)}")
+    flags = (
+        f"{build_objective_flags(options, objective_count)} "
+        f"Kmain/summon/moon/unsafe/miab "
+        f"{build_pass_flags(options)} "
+        f"{build_characters_flags(options)} "
+        f"Twild/junk "
+        f"{build_shops_flags(options)} "
+        f"{build_bosses_flags(options)} "
+        f"{build_encounters_flags(options)} "
+        f"Gdupe/mp/warp/life/sylph/backrow "
+        f"{build_misc_flags(options)}"
+        f"{build_starter_kit_flags(options)}"
+    )
     return flags
+
 
 def build_objective_flags(options: FF4FEOptions, objective_count: int):
     objective_flags = "Omode:"
-    primary_objectives = []
+    primary_objectives: list[str] = []
     if options.ForgeTheCrystal:
         primary_objectives.append("classicforge")
     if options.ConquerTheGiant:
@@ -35,33 +40,40 @@ def build_objective_flags(options: FF4FEOptions, objective_count: int):
         objective_flags += "/win:crystal"
     else:
         objective_flags += "/win:game"
-    objective_flags += f"/req:{min(objective_count, options.RequiredObjectiveCount.value)}"
+    objective_flags += (
+        f"/req:{min(objective_count, options.RequiredObjectiveCount.value)}"
+    )
     return objective_flags
+
 
 def build_key_items_flags(options: FF4FEOptions):
     pass
+
 
 def build_pass_flags(options: FF4FEOptions):
     pass_flags = ""
     pass_key_flags = ""
     pass_shop_flags = ""
     if options.PassEnabled:
-        pass_key_flags = f"key"
+        pass_key_flags = "key"
     if options.PassInShops:
-        pass_shop_flags = f"shop"
+        pass_shop_flags = "shop"
     if pass_key_flags != "" and pass_shop_flags != "":
         pass_flags = f"P{pass_key_flags}/{pass_shop_flags}"
     elif pass_key_flags == "" and pass_shop_flags == "":
         pass_flags = " "
     else:
-        pass_flags = (f"P{pass_key_flags}{pass_shop_flags}")
+        pass_flags = f"P{pass_key_flags}{pass_shop_flags}"
     return pass_flags
+
 
 def build_characters_flags(options: FF4FEOptions):
     party_size_flags = f"Cparty:{options.PartySize}/"
     hero_challenge_flags = ""
     if options.HeroChallenge.current_key != "none":
-        hero_challenge_flags = f"hero/start:{options.HeroChallenge.current_key.lower()}/"
+        hero_challenge_flags = (
+            f"hero/start:{options.HeroChallenge.current_key.lower()}/"
+        )
     free_character_flags = ""
     if options.NoFreeCharacters:
         free_character_flags += "nofree/"
@@ -78,31 +90,36 @@ def build_characters_flags(options: FF4FEOptions):
         permadeath_flags = "permadeath/"
     if options.CharactersPermadie.current_key == "extreme":
         permadeath_flags = "permadeader/"
-    flags = (f"{party_size_flags}{hero_challenge_flags}"
-             f"{free_character_flags}{duplicate_character_flags}"
-             f"{permajoin_flags}{permadeath_flags}j:spells,abilities")
+    flags = (
+        f"{party_size_flags}{hero_challenge_flags}"
+        f"{free_character_flags}{duplicate_character_flags}"
+        f"{permajoin_flags}{permadeath_flags}j:spells,abilities"
+    )
     return flags
+
 
 def build_treasures_flags(options: FF4FEOptions):
     pass
 
+
 def build_shops_flags(options: FF4FEOptions):
-    shops_flags = f"Sempty"
+    shops_flags = "Sempty"
     if options.ShopRandomization.current_key == "vanilla":
-        shops_flags = f"Svanilla"
+        shops_flags = "Svanilla"
     elif options.ShopRandomization.current_key == "shuffle":
-        shops_flags = f"Sshuffle"
+        shops_flags = "Sshuffle"
     elif options.ShopRandomization.current_key == "standard":
-        shops_flags = f"Sstandard"
+        shops_flags = "Sstandard"
     elif options.ShopRandomization.current_key == "pro":
-        shops_flags = f"Spro"
+        shops_flags = "Spro"
     elif options.ShopRandomization.current_key == "wild":
-        shops_flags = f"Swild"
+        shops_flags = "Swild"
     elif options.ShopRandomization.current_key == "cabins":
-        shops_flags = f"Scabins"
+        shops_flags = "Scabins"
     if options.FreeShops:
         shops_flags += "/free"
     return shops_flags
+
 
 def build_bosses_flags(options: FF4FEOptions):
     bosses_flags = "Bstandard/alt:gauntlet/whichburn"
@@ -110,20 +127,24 @@ def build_bosses_flags(options: FF4FEOptions):
         bosses_flags += "/nofree"
     return bosses_flags
 
+
 def build_encounters_flags(options: FF4FEOptions):
     encounters_flags = "Etoggle"
     if options.KeepDoorsBehemoths:
         encounters_flags += "/keep:doors,behemoths"
     return encounters_flags
 
+
 def build_glitches_flags(options: FF4FEOptions):
     pass
+
 
 def build_misc_flags(options: FF4FEOptions):
     spoon_flag = "-spoon"
     adamant_flag = "-noadamants" if options.NoAdamantArmors else ""
     wacky_flag = process_wacky_name(options.WackyChallenge.current_key)
     return f"{spoon_flag} {adamant_flag} {wacky_flag}"
+
 
 def build_starter_kit_flags(options: FF4FEOptions):
     kit1 = process_kit_name(options.StarterKitOne.current_key)
@@ -157,6 +178,7 @@ def process_kit_name(kit: str):
         return "random"
     else:
         return kit
+
 
 def process_wacky_name(wacky: str):
     wacky_flag = ""

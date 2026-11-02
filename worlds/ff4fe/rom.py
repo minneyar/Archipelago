@@ -2,23 +2,24 @@ import argparse
 import json
 import logging
 import os
-import pkgutil
 import tempfile
-
-from typing import TYPE_CHECKING
+from typing import final, override
 
 import Utils
 from settings import get_settings
-from worlds.Files import APProcedurePatch, APTokenMixin, APPatchExtension
+
+from worlds.Files import APPatchExtension, APProcedurePatch, APTokenMixin
+
 from .items import all_items
 
-if TYPE_CHECKING:
-    from . import FF4FEWorld
-
-
 ROM_NAME = 0x007FC0
-sentinel_addresses = [ # A list of memory addresses that amounts to "are we in a cutscene or battle or menu".
-    0xF506B1, 0xF506D9, 0xF50650, 0xF50140, 0xF50685, 0xE070FD
+sentinel_addresses = [  # A list of memory addresses that amounts to "are we in a cutscene or battle or menu".
+    0xF506B1,
+    0xF506D9,
+    0xF50650,
+    0xF50140,
+    0xF50685,
+    0xE070FD,
 ]
 inventory_start_location = 0xF51440
 inventory_size = 96
@@ -30,7 +31,7 @@ key_items_tracker_start_location = 0xF51500
 key_items_tracker_size = 3
 items_received_location_start = 0xE02FFE
 items_received_size = 2
-victory_byte_location= 0xE070F2
+victory_byte_location = 0xE070F2
 
 objective_threshold_start_location = 0x21F820
 objective_threshold_size = 32
@@ -58,11 +59,12 @@ special_flag_key_items = {
     "Darkness Crystal": (0xF5128C, 0b00000001),
     "Earth Crystal": (0xF5128C, 0b00000010),
     "Package": (0xF5128C, 0b00001000),
-    "Legend Sword": (0xF5128C, 0b00100000)
+    "Legend Sword": (0xF5128C, 0b00100000),
 }
 
 airship_flyable_flag = (0xF51286, 0b11111011)
 drill_attached_flag = (0xF51287, 0b00100000)
+
 
 def get_base_rom_as_bytes() -> bytes:
     with open(get_settings().ff4fe_options.rom_file, "rb") as infile:
@@ -70,6 +72,7 @@ def get_base_rom_as_bytes() -> bytes:
     return base_rom_bytes
 
 
+@final
 class FF4FEPatchExtension(APPatchExtension):
     game = "Final Fantasy IV Free Enterprise"
 
@@ -90,6 +93,7 @@ class FF4FEPatchExtension(APPatchExtension):
         try:
             logging.info(f"Loading Free Enterprise from {data_dir}")
             import sys
+
             sys.path.append(data_dir)
             from FreeEnterprise4.FreeEnt.cmd_make import MakeCommand
         except:
@@ -111,36 +115,39 @@ class FF4FEPatchExtension(APPatchExtension):
                 f"-s={seed}",
                 f"-f={flags}",
                 f"-o={os.path.join(directory, output_file)}",
-                f"-a={placement_string}"
+                f"-a={placement_string}",
             ]
             args = parser.parse_args(arguments)
             cmd.execute(args)
         with open(os.path.join(directory, output_file), "rb") as file:
             rom_data = bytearray(file.read())
-            rom_data[ROM_NAME:ROM_NAME+20] = bytes(rom_name, encoding="utf-8")
-            rom_data[junk_tier_byte:junk_tier_byte + 1] = bytes([junk_tier])
+            rom_data[ROM_NAME : ROM_NAME + 20] = bytes(rom_name, encoding="utf-8")
+            rom_data[junk_tier_byte : junk_tier_byte + 1] = bytes([junk_tier])
             rom_data[junked_items_length_byte] = len(junked_items)
             rom_data[kept_items_length_byte] = len(kept_items)
             for i, item_name in enumerate(junked_items):
-                item_id = [item for item in all_items if item.name == item_name].pop().fe_id
+                item_id = [
+                    item for item in all_items if item.name == item_name
+                ].pop().fe_id
                 rom_data[junked_items_array_start + i] = item_id
             for i, item_name in enumerate(kept_items):
-                item_id = [item for item in all_items if item.name == item_name].pop().fe_id
+                item_id = [
+                    item for item in all_items if item.name == item_name
+                ].pop().fe_id
                 rom_data[kept_items_array_start + i] = item_id
         return rom_data
 
 
+@final
 class FF4FEProcedurePatch(APProcedurePatch, APTokenMixin):
     game = "Final Fantasy IV Free Enterprise"
     hash = "27D02A4F03E172E029C9B82AC3DB79F7"
     patch_file_ending = ".apff4fe"
     result_file_ending = ".sfc"
 
-    procedure = [
-        ("call_fe", ["placement_file.json"])
-    ]
+    procedure = [("call_fe", ["placement_file.json"])]
 
     @classmethod
+    @override
     def get_source_data(cls) -> bytes:
         return get_base_rom_as_bytes()
-

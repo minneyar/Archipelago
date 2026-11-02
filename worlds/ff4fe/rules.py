@@ -7,7 +7,7 @@ area_rules = {
     "ToroiaTreasury": ["Earth Crystal"],
     "Adamant": ["Hook"],
     "UpperBabilAfterFall": ["King and Queen Slot Defeated", "Rubicant Slot Defeated"],
-    "SealedCave": ["Luca Key"]
+    "SealedCave": ["Luca Key"],
 }
 
 boss_rules = {
@@ -24,15 +24,20 @@ boss_rules = {
     "Rubicant Slot": ["King and Queen Slot Defeated"],
     "Odin Slot": ["Baron Key", "Baigan Slot Defeated"],
     "CPU Slot": ["Elements Slot Defeated"],
-    "Zeromus": ["Crystal"]
+    "Zeromus": ["Crystal"],
 }
 
 individual_location_rules = {
     # This is a really janky way of ensuring we can find D. Mist without having to randomize the bosses through AP
     "Mist -- Exterior -- Rydia's Mom item": [
-        "Hook", "Earth Crystal", "Package",
-        "TwinHarp", "Tower Key", "Darkness Crystal",
-        "Luca Key", "Baron Key"
+        "Hook",
+        "Earth Crystal",
+        "Package",
+        "TwinHarp",
+        "Tower Key",
+        "Darkness Crystal",
+        "Luca Key",
+        "Baron Key",
     ],
     "Mist Character": ["Package"],
     "Kaipo Character": ["SandRuby"],
@@ -52,11 +57,17 @@ individual_location_rules = {
     "Dwarf Castle -- Throne Room -- Luca item": ["Golbez Slot Defeated"],
     "Sealed Cave -- Crystal Room --  item": ["Evilwall Slot Defeated"],
     "Fabul -- West tower 3F (Yang's room) -- Found Yang item": ["Hook", "Magma Key"],
-    "Fabul -- West tower 3F (Yang's room) -- Pan Trade item": ["Hook", "Magma Key", "Pan"],
+    "Fabul -- West tower 3F (Yang's room) -- Pan Trade item": [
+        "Hook",
+        "Magma Key",
+        "Pan",
+    ],
     "Sylvan Cave -- B3F -- Sylph item": ["Hook", "Magma Key", "Pan"],
     "Mt. Ordeals -- Mirror Room -- item": ["Mirror Cecil Slot Defeated"],
     "Cave Magnes -- Crystal Room -- item": ["Dark Elf Slot Defeated"],
-    "Tower of Bab-il (lower) -- 5F -- item (Super Cannon destruction)": ["Dark Imp Slot Defeated"],
+    "Tower of Bab-il (lower) -- 5F -- item (Super Cannon destruction)": [
+        "Dark Imp Slot Defeated"
+    ],
     "Baron Castle -- Basement -- Odin item": ["Odin Slot Defeated"],
     "Cave Bahamut -- B3F -- Baham item": ["Bahamut Slot Defeated"],
     "Town of Monsters -- Throne Room -- Asura item": ["Asura Slot Defeated"],
@@ -66,44 +77,65 @@ individual_location_rules = {
     "Kokkol's House 2F -- Kokkol -- forge item": ["Legend Sword", "Adamant"],
     "Lunar Subterrane -- B7 (right room) -- Ribbon Left": ["D. Lunars Slot Defeated"],
     "Lunar Subterrane -- B7 (right room) -- Ribbon Right": ["D. Lunars Slot Defeated"],
-    "Objectives Status": [*[item for item in items.key_item_names if item not in ["Crystal", "Spoon", "Pass"]]],
-    "Objective Reward": ["All Objectives Cleared"]
+    "Objectives Status": [
+        *[
+            item
+            for item in items.key_item_names
+            if item not in ["Crystal", "Spoon", "Pass"]
+        ]
+    ],
+    "Objective Reward": ["All Objectives Cleared"],
 }
 
 location_tiers = {
     # -- Tier 0 --
     # -- Available from start of game with no gating or difficulty --
     0: [
-        "BaronTown", "Mist", "Kaipo", "Silvera", "ToroiaTown", "Agart",
-        "ChocoboForest", "Damcyan", "Fabul", "ToroiaCastle", "Mysidia"
+        "BaronTown",
+        "Mist",
+        "Kaipo",
+        "Silvera",
+        "ToroiaTown",
+        "Agart",
+        "ChocoboForest",
+        "Damcyan",
+        "Fabul",
+        "ToroiaCastle",
+        "Mysidia",
     ],
     # -- Tier 1 --
     # -- Available from start of game with minimal gating or difficulty --
-    1: [
-        "MistCave", "WateryPass", "AntlionCave", "MountOrdeals"
-    ],
+    1: ["MistCave", "WateryPass", "AntlionCave", "MountOrdeals"],
     # -- Tier 2 --
     # -- Available after defeating a boss or receiving a single key item --
     2: [
-        "BaronWeaponShop", "Sewer", "ToroiaTreasury", "Waterfall", "MountHobs",
-        "DwarfCastle", "Smithy", "Tomra"
+        "BaronWeaponShop",
+        "Sewer",
+        "ToroiaTreasury",
+        "Waterfall",
+        "MountHobs",
+        "DwarfCastle",
+        "Smithy",
+        "Tomra",
     ],
     # -- Tier 3 --
     # -- Available after defeating a boss or receiving a key item with some difficulty
     3: [
-        "CaveMagnes", "Zot", "CaveEblan", "LowerBabil", "CaveOfSummons",
-        "UpperBabil", "UpperBabilAfterFall", "SealedCave"
+        "CaveMagnes",
+        "Zot",
+        "CaveEblan",
+        "LowerBabil",
+        "CaveOfSummons",
+        "UpperBabil",
+        "UpperBabilAfterFall",
+        "SealedCave",
     ],
     # -- Tier 4 --
     # -- Requires multiple key items and/or bosses to access
-    4: [
-        "BaronCastle", "Eblan", "Feymarch", "SylvanCave", "Adamant"
-    ],
+    4: ["BaronCastle", "Eblan", "Feymarch", "SylvanCave", "Adamant"],
     # -- Tier 5 --
     # -- THE MOON --
-    5: [
-        "Giant", "BahamutCave", "LunarPath", "LunarCore", "LunarPalace"
-    ]
+    5: ["Giant", "BahamutCave", "LunarPath", "LunarCore", "LunarPalace"],
 }
 
 logical_gating = {

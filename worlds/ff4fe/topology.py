@@ -1,8 +1,4 @@
-surfaces = [
-    "Overworld",
-    "Underworld",
-    "Moon"
-]
+surfaces = ["Overworld", "Underworld", "Moon"]
 
 areas = [
     "BaronTown",
@@ -45,15 +41,10 @@ areas = [
     "LunarCore",
     "Adamant",
     "Mysidia",
-    "LunarPalace"
+    "LunarPalace",
 ]
 
-hook_areas = [
-    "UpperBabil",
-    "UpperBabilAfterFall",
-    "CaveEblan",
-    "Adamant"
-]
+hook_areas = ["UpperBabil", "UpperBabilAfterFall", "CaveEblan", "Adamant"]
 
 underworld_areas = [
     "Smithy",
@@ -63,15 +54,11 @@ underworld_areas = [
     "CaveOfSummons",
     "Feymarch",
     "SylvanCave",
-    "SealedCave"
+    "SealedCave",
 ]
 
-moon_areas = [
-    "Giant",
-    "BahamutCave",
-    "LunarPath",
-    "LunarCore",
-    "LunarPalace"
-]
+moon_areas = ["Giant", "BahamutCave", "LunarPath", "LunarCore", "LunarPalace"]
 
-overworld_areas = [area for area in areas if area not in [*hook_areas, *underworld_areas, *moon_areas]]
+overworld_areas = [
+    area for area in areas if area not in [*hook_areas, *underworld_areas, *moon_areas]
+]
